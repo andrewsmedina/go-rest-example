@@ -16,16 +16,13 @@ type Service struct {
 	Name string
 }
 
+var db *sql.DB
+
 func (h Hello) ServeHTTP(
 	w http.ResponseWriter,
 	r *http.Request) {
 
 	services := []Service{}
-
-    db, err := sql.Open("mymysql", "project/andrews/123")
-	if err != nil {
-		panic(err)
-	}
 
 	rows, err := db.Query("SELECT id, name FROM services")
 	if err != nil {
@@ -39,17 +36,14 @@ func (h Hello) ServeHTTP(
 		services = append(services, Service{id, name})
 	}
 
-	err = db.Close()
-	if err != nil {
-		panic(err)
-	}
-
 	b, _ := json.Marshal(services)
 	fmt.Fprint(w, bytes.NewBuffer(b).String())
 
 }
 
 func main() {
+	db, _ = sql.Open("mymysql", "project/andrews/123")
+	defer db.Close()
 	var h Hello
 	http.ListenAndServe("localhost:4000", h)
 }
